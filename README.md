@@ -1,0 +1,1 @@
+Simple library to read/write from/to a windows process
