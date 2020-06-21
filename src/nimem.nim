@@ -59,9 +59,9 @@ proc ProcessByName*(name: string): Process =
 
   raise newException(IOError, fmt"Process '{name}' not found")
 
-proc read*[T](p: Process, address: ByteAddress, t: typedesc[T]): T =
+proc read*(p: Process, address: ByteAddress, t: typedesc): t =
   if not ReadProcessMemory(
-    p.handle, cast[pointer](address), cast[pointer](result.addr), cast[SIZE_T](sizeof(T)), nil
+    p.handle, cast[pointer](address), cast[pointer](result.addr), cast[SIZE_T](sizeof(t)), nil
   ).bool:
     let
       err = GetLastError()

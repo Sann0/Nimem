@@ -22,7 +22,7 @@ when isMainModule:
   try:
     let 
       p = ProcessByName("notepad.exe")
-      txtPtr = p.dmaAddr(p.baseaddr + CharOffset, [0])
+      txtPtr = p.dmaAddr(p.baseaddr + CharOffset, [0x0])
 
     while true:
       echo parseTextArray(
