@@ -124,7 +124,7 @@ proc aobScan*(p: Process, pattern: string, module: Mod = Mod()): ByteAddress =
     {reIgnoreCase, reDotAll}
   )
 
-  if module.baseaddr != 0:
+  if module.baseaddr.bool:
     scanBegin = module.baseaddr
     scanEnd = module.baseaddr + module.basesize
   else:
