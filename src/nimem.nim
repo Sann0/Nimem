@@ -60,9 +60,9 @@ proc ProcessByName*(name: string): Process =
   raise newException(IOError, fmt"Process '{name}' not found")
 
 proc read*(p: Process, address: ByteAddress, t: typedesc): t =
-  if not ReadProcessMemory(
+  if ReadProcessMemory(
     p.handle, cast[pointer](address), cast[pointer](result.addr), cast[SIZE_T](sizeof(t)), nil
-  ).bool:
+  ) == 0:
     let
       err = GetLastError()
       errAddr = address.toHex()
@@ -73,9 +73,9 @@ proc read*(p: Process, address: ByteAddress, t: typedesc): t =
 
 proc readByteSeq*(p: Process, address: ByteAddress, size: SIZE_T): seq[byte] =
   var data = newSeq[byte](size)
-  if not ReadProcessMemory(
+  if ReadProcessMemory(
     p.handle, cast[pointer](address), cast[pointer](data[0].addr), cast[SIZE_T](size), nil
-  ).bool:
+  ) == 0:
     let
       err = GetLastError()
       errAddr = address.toHex()
@@ -100,9 +100,9 @@ proc readString*(p: Process, address: ByteAddress): string =
   )
 
 proc write*(p: Process, address: ByteAddress, data: any) =
-  if not WriteProcessMemory(
+  if WriteProcessMemory(
     p.handle, cast[pointer](address), cast[pointer](data.unsafeAddr), cast[SIZE_T](sizeof(data)), nil
-  ).bool:
+  ) == 0:
     let
       err = GetLastError()
       errAddr = address.toHex()
