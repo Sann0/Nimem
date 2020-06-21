@@ -28,7 +28,7 @@ proc pidInfo(pid: DWORD): Process =
   var me: MODULEENTRY32
   me.dwSize = sizeof(me).DWORD
 
-  if Module32First(snap, addr me).bool:
+  if Module32First(snap, addr me) == 1:
     result = Process(
       name: $winstrConverterArrayToLPWSTR(me.szModule),
       pid: me.th32ProcessID,
@@ -36,7 +36,7 @@ proc pidInfo(pid: DWORD): Process =
       basesize: me.modBaseSize,
     )
 
-    while Module32Next(snap, addr me).bool:
+    while Module32Next(snap, addr me) != 0:
       var m = Mod(
         baseaddr: cast[ByteAddress](me.modBaseAddr),
         basesize: me.modBaseSize,
