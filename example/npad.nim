@@ -2,7 +2,7 @@
   Read input from notepad.exe
 ]#
 
-import mem
+import nimem
 
 import os
 import sequtils
