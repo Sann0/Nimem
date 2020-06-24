@@ -85,9 +85,9 @@ proc readByteSeq*(p: Process, address: ByteAddress, size: SIZE_T): seq[byte] =
     )
   result = data
 
-proc readString*(p: Process, address: ByteAddress): cstring =
+proc readString*(p: Process, address: ByteAddress): string =
   let r = p.read(address, array[0..150, char])
-  cast[cstring](r[0].unsafeAddr)
+  $cast[cstring](r[0].unsafeAddr)
 
 proc write*(p: Process, address: ByteAddress, data: any) =
   if WriteProcessMemory(
