@@ -85,19 +85,9 @@ proc readByteSeq*(p: Process, address: ByteAddress, size: SIZE_T): seq[byte] =
     )
   result = data
 
-proc readString*(p: Process, address: ByteAddress): string =
-  let
-    rb = p.read(address, array[0..150, byte])
-    i = rb.find(0.byte)
-
-  if i != -1:
-    return cast[string](rb[0..<i])
-
-  let errAddr = address.toHex()
-  raise newException(
-    AccessViolationError,
-    fmt"ReadString failed [Address: 0x{errAddr}]"
-  )
+proc readString*(p: Process, address: ByteAddress): cstring =
+  let r = p.read(address, array[0..150, char])
+  cast[cstring](r[0].unsafeAddr)
 
 proc write*(p: Process, address: ByteAddress, data: any) =
   if WriteProcessMemory(
