@@ -9,14 +9,13 @@ import sequtils
 
 const CharOffset = 0x2C470
 
-proc parseTextArray(a: openArray[byte]): string =
+proc parseTextArray(a: openArray[byte]): cstring =
   let 
     s = toSeq(a.pairs)
       .filterIt(it[0] mod 2 == 0)
       .mapIt(it[1])
-    i = s.find(0.byte)
-
-  cast[string](s[0..<i])
+      
+  result = cast[cstring](s[0].unsafeAddr)
 
 when isMainModule:
   try:
