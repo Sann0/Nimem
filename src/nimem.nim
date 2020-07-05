@@ -6,7 +6,6 @@ import re
 import winim/winstr
 import winim/inc/[winbase, tlhelp32, windef, psapi]
 
-
 type
   Mod* = object
     baseaddr*: ByteAddress
@@ -118,22 +117,22 @@ proc aobScan*(p: Process, pattern: string, module: Mod = Mod()): ByteAddress =
     scanEnd = module.baseaddr + module.basesize
   else:
     var sysInfo = SYSTEM_INFO()
-    GetSystemInfo(addr sysInfo)
+    GetSystemInfo(sysInfo.addr)
     scanBegin = cast[int](sysInfo.lpMinimumApplicationAddress)
     scanEnd = cast[int](sysInfo.lpMaximumApplicationAddress)
 
   var mbi = MEMORY_BASIC_INFORMATION()
-  VirtualQueryEx(p.handle, cast[LPCVOID](scanBegin), addr mbi, cast[SIZE_T](sizeof(mbi)))
+  VirtualQueryEx(p.handle, cast[LPCVOID](scanBegin), mbi.addr, cast[SIZE_T](sizeof(mbi)))
 
   var curAddr = scanBegin
   while curAddr < scanEnd:
-    curAddr += int mbi.RegionSize
-    VirtualQueryEx(p.handle, cast[LPCVOID](curAddr), addr mbi, cast[SIZE_T](sizeof(mbi)))
+    curAddr += mbi.RegionSize.int
+    VirtualQueryEx(p.handle, cast[LPCVOID](curAddr), mbi.addr, cast[SIZE_T](sizeof(mbi)))
 
     if mbi.State != MEM_COMMIT or mbi.State == PAGE_NOACCESS: continue
 
     var oldProt: DWORD
-    VirtualProtectEx(p.handle, cast[LPCVOID](curAddr), mbi.RegionSize, PAGE_EXECUTE_READWRITE, addr oldProt)
+    VirtualProtectEx(p.handle, cast[LPCVOID](curAddr), mbi.RegionSize, PAGE_EXECUTE_READWRITE, oldProt.addr)
     let byteString = cast[string](p.readByteSeq(cast[ByteAddress](mbi.BaseAddress), mbi.RegionSize)).toHex()
     VirtualProtectEx(p.handle, cast[LPCVOID](curAddr), mbi.RegionSize, oldProt, nil)
 
