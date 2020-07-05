@@ -27,32 +27,32 @@ proc pidInfo(pid: DWORD): Process =
 
   var me = MODULEENTRY32(dwSize: cint sizeof(MODULEENTRY32))
 
-  if Module32First(snap, addr me) == TRUE:
+  if Module32First(snap, addr me) == 1:
     result = Process(
-      name: $winstrConverterArrayToLPWSTR(me.szModule),
+      name: $me.szModule,
       pid: me.th32ProcessID,
       baseaddr: cast[ByteAddress](me.modBaseAddr),
       basesize: me.modBaseSize,
     )
 
-    while Module32Next(snap, addr me) != FALSE:
+    while Module32Next(snap, addr me) != 0:
       var m = Mod(
         baseaddr: cast[ByteAddress](me.modBaseAddr),
         basesize: me.modBaseSize,
       )
-      result.modules[$winstrConverterArrayToLPWSTR(me.szModule)] = m
+      result.modules[$me.szModule] = m
 
 proc ProcessByName*(name: string): Process =
   var pidArray = newSeq[int32](1024)
-  var read: DWORD = 0
+  var read: DWORD
 
-  assert EnumProcesses(addr pidArray[0], 1024, addr read) != FALSE
+  assert EnumProcesses(addr pidArray[0], 1024, addr read) != 0
 
-  for i in 0..<int(int(read) / 4):
+  for i in 0..<read div 4:
     var p = pidInfo(pidArray[i])
     if p.pid != 0 and p.name == name:
-      p.handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, p.pid).DWORD
-      if not p.handle.bool:
+      p.handle = OpenProcess(PROCESS_ALL_ACCESS, 0, p.pid).DWORD
+      if p.handle == 0:
         raise newException(IOError, fmt"Unable to open Process [Pid: {p.pid}] [Error code: {GetLastError()}]")
       return p
 
@@ -61,7 +61,7 @@ proc ProcessByName*(name: string): Process =
 proc read*(p: Process, address: ByteAddress, t: typedesc): t =
   if ReadProcessMemory(
     p.handle, cast[pointer](address), cast[pointer](result.addr), cast[SIZE_T](sizeof(t)), nil
-  ) == FALSE:
+  ) == 0:
     let
       err = GetLastError()
       errAddr = address.toHex()
@@ -74,7 +74,7 @@ proc readByteSeq*(p: Process, address: ByteAddress, size: SIZE_T): seq[byte] =
   var data = newSeq[byte](size)
   if ReadProcessMemory(
     p.handle, cast[pointer](address), cast[pointer](data[0].addr), cast[SIZE_T](size), nil
-  ) == FALSE:
+  ) == 0:
     let
       err = GetLastError()
       errAddr = address.toHex()
@@ -91,7 +91,7 @@ proc readString*(p: Process, address: ByteAddress): string =
 proc write*(p: Process, address: ByteAddress, data: any) =
   if WriteProcessMemory(
     p.handle, cast[pointer](address), cast[pointer](data.unsafeAddr), cast[SIZE_T](sizeof(data)), nil
-  ) == FALSE:
+  ) == 0:
     let
       err = GetLastError()
       errAddr = address.toHex()
@@ -142,4 +142,4 @@ proc aobScan*(p: Process, pattern: string, module: Mod = Mod()): ByteAddress =
       return r.first div 2 + curAddr
 
 proc close*(p: Process): bool {.discardable.} =
-  result = cast[bool](CloseHandle(p.handle))
+  result = CloseHandle(p.handle).bool
