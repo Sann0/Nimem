@@ -17,10 +17,10 @@ type
     basesize*: DWORD
     modules*: Table[string, Mod]
 
-template memoryErr(m: string): untyped =
-  newException(
+proc memoryErr(m: string, a: ByteAddress) =
+  raise newException(
     AccessViolationError,
-    m & fmt" failed [Address: 0x{address.toHex()}] [Error code: {GetLastError()}]"
+    fmt"{m} failed [Address: 0x{a.toHex()}] [Error: {GetLastError()}]"
   )
 
 proc pidInfo(pid: DWORD): Process =
@@ -64,14 +64,14 @@ proc read*(p: Process, address: ByteAddress, t: typedesc): t =
   if ReadProcessMemory(
     p.handle, cast[pointer](address), result.addr, cast[SIZE_T](sizeof(t)), nil
   ) == 0:
-    raise memoryErr("Read")
+    memoryErr("Read", address)
 
 proc readByteSeq*(p: Process, address: ByteAddress, size: SIZE_T): seq[byte] =
   var data = newSeq[byte](size)
   if ReadProcessMemory(
     p.handle, cast[pointer](address), data[0].addr, size, nil
   ) == 0:
-    raise memoryErr("ReadByteSeq")
+    memoryErr("ReadByteSeq", address)
 
   result = data
 
@@ -83,7 +83,7 @@ proc write*(p: Process, address: ByteAddress, data: any) =
   if WriteProcessMemory(
     p.handle, cast[pointer](address), data.unsafeAddr, cast[SIZE_T](sizeof(data)), nil
   ) == 0:
-    raise memoryErr("Write")
+    memoryErr("Write", address)
 
 proc dmaAddr*(p: Process, baseAddr: ByteAddress, offsets: openArray[int]): ByteAddress =
   result = p.read(baseAddr, ByteAddress)
