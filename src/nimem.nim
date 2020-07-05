@@ -1,7 +1,5 @@
-import tables
-import strformat
-import strutils
-import re
+import tables, re
+import strformat, strutils
 
 import winim/winstr
 import winim/inc/[winbase, tlhelp32, windef, psapi]
@@ -19,6 +17,11 @@ type
     basesize*: DWORD
     modules*: Table[string, Mod]
 
+template memoryErr(msg: string): untyped =
+  newException(
+    AccessViolationError,
+    msg & fmt" [Address: 0x{address.toHex()}] [Error code: {GetLastError()}]"
+  )
 
 proc pidInfo(pid: DWORD): Process =
   var snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE or TH32CS_SNAPMODULE32, pid)
@@ -61,26 +64,15 @@ proc read*(p: Process, address: ByteAddress, t: typedesc): t =
   if ReadProcessMemory(
     p.handle, cast[pointer](address), result.addr, cast[SIZE_T](sizeof(t)), nil
   ) == 0:
-    let
-      err = GetLastError()
-      errAddr = address.toHex()
-    raise newException(
-      AccessViolationError,
-      fmt"Read failed [Address: 0x{errAddr}] [Error code: {err}]"
-    )
+    raise memoryErr("Read failed")
 
 proc readByteSeq*(p: Process, address: ByteAddress, size: SIZE_T): seq[byte] =
   var data = newSeq[byte](size)
   if ReadProcessMemory(
     p.handle, cast[pointer](address), data[0].addr, size, nil
   ) == 0:
-    let
-      err = GetLastError()
-      errAddr = address.toHex()
-    raise newException(
-      AccessViolationError,
-      fmt"ReadByteSeq failed [Address: 0x{errAddr}] [Error code: {err}]"
-    )
+    raise memoryErr("ReadByteSeq failed")
+
   result = data
 
 proc readString*(p: Process, address: ByteAddress): string =
@@ -91,13 +83,7 @@ proc write*(p: Process, address: ByteAddress, data: any) =
   if WriteProcessMemory(
     p.handle, cast[pointer](address), data.unsafeAddr, cast[SIZE_T](sizeof(data)), nil
   ) == 0:
-    let
-      err = GetLastError()
-      errAddr = address.toHex()
-    raise newException(
-      AccessViolationError,
-      fmt"Write failed [Address: 0x{errAddr}] [Error code: {err}]"
-    )
+    raise memoryErr("Write failed")
 
 proc dmaAddr*(p: Process, baseAddr: ByteAddress, offsets: openArray[int]): ByteAddress =
   result = p.read(baseAddr, ByteAddress)
