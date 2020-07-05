@@ -60,14 +60,13 @@ proc processByName*(name: string): Process =
       
   raise newException(IOError, fmt"Process '{name}' not found")
 
-proc waitForProcess*(name, msg: string, checkInterval = 1500): Process =
-  echo msg
+proc waitForProcess*(name: string, interval = 1500): Process =
   while true:
     try:
       result = processByName(name)
       break
     except:
-      sleep(checkInterval)
+      sleep(interval)
 
 proc read*(p: Process, address: ByteAddress, t: typedesc): t =
   if ReadProcessMemory(
