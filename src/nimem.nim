@@ -59,7 +59,7 @@ proc ProcessByName*(name: string): Process =
 
 proc read*(p: Process, address: ByteAddress, t: typedesc): t =
   if ReadProcessMemory(
-    p.handle, cast[pointer](address), cast[pointer](result.addr), cast[SIZE_T](sizeof(t)), nil
+    p.handle, cast[pointer](address), result.addr, cast[SIZE_T](sizeof(t)), nil
   ) == 0:
     let
       err = GetLastError()
@@ -72,7 +72,7 @@ proc read*(p: Process, address: ByteAddress, t: typedesc): t =
 proc readByteSeq*(p: Process, address: ByteAddress, size: SIZE_T): seq[byte] =
   var data = newSeq[byte](size)
   if ReadProcessMemory(
-    p.handle, cast[pointer](address), cast[pointer](data[0].addr), cast[SIZE_T](size), nil
+    p.handle, cast[pointer](address), data[0].addr, size, nil
   ) == 0:
     let
       err = GetLastError()
@@ -89,7 +89,7 @@ proc readString*(p: Process, address: ByteAddress): string =
 
 proc write*(p: Process, address: ByteAddress, data: any) =
   if WriteProcessMemory(
-    p.handle, cast[pointer](address), cast[pointer](data.unsafeAddr), cast[SIZE_T](sizeof(data)), nil
+    p.handle, cast[pointer](address), data.unsafeAddr, cast[SIZE_T](sizeof(data)), nil
   ) == 0:
     let
       err = GetLastError()
