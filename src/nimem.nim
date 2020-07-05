@@ -60,7 +60,7 @@ proc processByName*(name: string): Process =
       
   raise newException(IOError, fmt"Process '{name}' not found")
 
-proc waitForProcess*(name, msg: string, checkInterval = 500): Process =
+proc waitForProcess*(name, msg: string, checkInterval = 1500): Process =
   echo msg
   while true:
     try:
