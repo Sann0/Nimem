@@ -1,4 +1,4 @@
-import tables, re
+import tables, re, os
 import strformat, strutils
 
 import winim/winstr
@@ -44,7 +44,7 @@ proc pidInfo(pid: DWORD): Process =
       )
       result.modules[$winstrConverterArrayToLPWSTR(me.szModule)] = m
 
-proc ProcessByName*(name: string): Process =
+proc processByName*(name: string): Process =
   var pidArray = newSeq[int32](1024)
   var read: DWORD
 
@@ -59,6 +59,15 @@ proc ProcessByName*(name: string): Process =
       raise newException(IOError, fmt"Unable to open Process [Pid: {p.pid}] [Error code: {GetLastError()}]")
       
   raise newException(IOError, fmt"Process '{name}' not found")
+
+proc waitForProcess*(name, msg: string, checkInterval = 500): Process =
+  echo msg
+  while true:
+    try:
+      result = processByName(name)
+      break
+    except:
+      sleep(checkInterval)
 
 proc read*(p: Process, address: ByteAddress, t: typedesc): t =
   if ReadProcessMemory(

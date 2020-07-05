@@ -20,7 +20,7 @@ proc parseTextArray(a: openArray[byte]): cstring =
 when isMainModule:
   try:
     let 
-      p = ProcessByName("notepad.exe")
+      p = processByName("notepad.exe")
       txtPtr = p.dmaAddr(p.baseaddr + CharOffset, [0x0])
 
     while true:
