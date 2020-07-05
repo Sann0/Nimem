@@ -29,7 +29,7 @@ proc pidInfo(pid: DWORD): Process =
 
   if Module32First(snap, addr me) == 1:
     result = Process(
-      name: $me.szModule,
+      name: $winstrConverterArrayToLPWSTR(me.szModule),
       pid: me.th32ProcessID,
       baseaddr: cast[ByteAddress](me.modBaseAddr),
       basesize: me.modBaseSize,
@@ -40,22 +40,22 @@ proc pidInfo(pid: DWORD): Process =
         baseaddr: cast[ByteAddress](me.modBaseAddr),
         basesize: me.modBaseSize,
       )
-      result.modules[$me.szModule] = m
+      result.modules[$winstrConverterArrayToLPWSTR(me.szModule)] = m
 
 proc ProcessByName*(name: string): Process =
   var pidArray = newSeq[int32](1024)
   var read: DWORD
 
-  assert EnumProcesses(addr pidArray[0], 1024, addr read) != 0
+  assert EnumProcesses(addr pidArray[0], 1024, addr read) != FALSE
 
   for i in 0..<read div 4:
     var p = pidInfo(pidArray[i])
     if p.pid != 0 and p.name == name:
       p.handle = OpenProcess(PROCESS_ALL_ACCESS, 0, p.pid).DWORD
-      if p.handle == 0:
-        raise newException(IOError, fmt"Unable to open Process [Pid: {p.pid}] [Error code: {GetLastError()}]")
-      return p
-
+      if p.handle != 0:
+        return p
+      raise newException(IOError, fmt"Unable to open Process [Pid: {p.pid}] [Error code: {GetLastError()}]")
+      
   raise newException(IOError, fmt"Process '{name}' not found")
 
 proc read*(p: Process, address: ByteAddress, t: typedesc): t =
@@ -142,4 +142,4 @@ proc aobScan*(p: Process, pattern: string, module: Mod = Mod()): ByteAddress =
       return r.first div 2 + curAddr
 
 proc close*(p: Process): bool {.discardable.} =
-  result = CloseHandle(p.handle).bool
+  result = CloseHandle(p.handle) == 1
