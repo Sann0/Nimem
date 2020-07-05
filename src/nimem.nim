@@ -27,7 +27,7 @@ proc pidInfo(pid: DWORD): Process =
   var snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE or TH32CS_SNAPMODULE32, pid)
   defer: CloseHandle(snap)
 
-  var me = MODULEENTRY32(dwSize: cint sizeof(MODULEENTRY32))
+  var me = MODULEENTRY32(dwSize: sizeof(MODULEENTRY32).cint)
 
   if Module32First(snap, me.addr) == 1:
     result = Process(
