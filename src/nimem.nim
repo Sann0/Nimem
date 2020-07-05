@@ -26,7 +26,7 @@ proc pidInfo(pid: DWORD): Process =
 
   var me = MODULEENTRY32(dwSize: cint sizeof(MODULEENTRY32))
 
-  if Module32First(snap, addr me) == 1:
+  if Module32First(snap, me.addr) == 1:
     result = Process(
       name: $winstrConverterArrayToLPWSTR(me.szModule),
       pid: me.th32ProcessID,
@@ -34,7 +34,7 @@ proc pidInfo(pid: DWORD): Process =
       basesize: me.modBaseSize,
     )
 
-    while Module32Next(snap, addr me) != 0:
+    while Module32Next(snap, me.addr) != 0:
       var m = Mod(
         baseaddr: cast[ByteAddress](me.modBaseAddr),
         basesize: me.modBaseSize,
@@ -45,7 +45,7 @@ proc ProcessByName*(name: string): Process =
   var pidArray = newSeq[int32](1024)
   var read: DWORD
 
-  assert EnumProcesses(addr pidArray[0], 1024, addr read) != FALSE
+  assert EnumProcesses(pidArray[0].addr, 1024, read.addr) != FALSE
 
   for i in 0..<read div 4:
     var p = pidInfo(pidArray[i])
