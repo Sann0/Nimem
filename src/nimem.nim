@@ -74,8 +74,8 @@ proc read*(p: Process, address: ByteAddress, t: typedesc): t =
   ) == 0:
     memoryErr("Read", address)
 
-proc readByteSeq*(p: Process, address: ByteAddress, size: SIZE_T): seq[byte] =
-  var data = newSeq[byte](size)
+proc readSeq*(p: Process, address: ByteAddress, size: SIZE_T,  t: typedesc = byte): seq[t] =
+  var data = newSeq[t](size)
   if ReadProcessMemory(
     p.handle, cast[pointer](address), data[0].addr, size, nil
   ) == 0:
@@ -127,7 +127,7 @@ proc aobScan*(p: Process, pattern: string, module: Mod = Mod()): ByteAddress =
 
     var oldProt: DWORD
     VirtualProtectEx(p.handle, cast[LPCVOID](curAddr), mbi.RegionSize, PAGE_EXECUTE_READWRITE, oldProt.addr)
-    let byteString = cast[string](p.readByteSeq(cast[ByteAddress](mbi.BaseAddress), mbi.RegionSize)).toHex()
+    let byteString = cast[string](p.readSeq(cast[ByteAddress](mbi.BaseAddress), mbi.RegionSize)).toHex()
     VirtualProtectEx(p.handle, cast[LPCVOID](curAddr), mbi.RegionSize, oldProt, nil)
 
     let r = byteString.findBounds(rePattern)
