@@ -80,13 +80,11 @@ proc read*(p: Process, address: ByteAddress, t: typedesc): t =
     memoryErr("Read", address)
 
 proc readSeq*(p: Process, address: ByteAddress, size: SIZE_T,  t: typedesc = byte): seq[t] =
-  var data = newSeq[t](size)
+  result = newSeq[t](size)
   if ReadProcessMemory(
-    p.handle, cast[pointer](address), data[0].addr, size, nil
+    p.handle, cast[pointer](address), result[0].addr, size, nil
   ) == 0:
     memoryErr("ReadByteSeq", address)
-
-  result = data
 
 proc readString*(p: Process, address: ByteAddress): string =
   let r = p.read(address, array[0..150, char])
