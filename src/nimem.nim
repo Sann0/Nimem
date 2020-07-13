@@ -4,6 +4,8 @@ import strformat, strutils
 import winim/winstr
 import winim/inc/[winbase, tlhelp32, windef, psapi]
 
+const NOP = 0x90.byte
+
 type
   Mod* = object
     baseaddr*: ByteAddress
@@ -136,6 +138,10 @@ proc aobScan*(p: Process, pattern: string, module: Mod = Mod()): ByteAddress =
     let r = byteString.findBounds(rePattern)
     if r.first != -1:
       return r.first div 2 + curAddr
+
+proc nopCode*(p: Process, address: ByteAddress, length: int = 1) =
+  for i in 0..length-1:
+    p.write(address + i, NOP)
 
 proc close*(p: Process): bool {.discardable.} =
   result = CloseHandle(p.handle) == 1
