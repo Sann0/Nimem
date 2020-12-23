@@ -1,7 +1,6 @@
-import 
-  tables, re, os, strutils
+import tables, re, os
+import strformat, strutils
 
-from strformat import fmt
 import winim/winstr
 import winim/inc/[winbase, tlhelp32, windef, psapi]
 
@@ -34,7 +33,7 @@ proc pidInfo(pid: DWORD): Process =
 
   if Module32First(snap, me.addr) == 1:
     result = Process(
-      name: nullTerminated($$me.szModule),
+      name: $winstrConverterArrayToLPWSTR(me.szModule),
       pid: me.th32ProcessID,
       baseaddr: cast[ByteAddress](me.modBaseAddr),
       basesize: me.modBaseSize,
@@ -50,7 +49,7 @@ proc pidInfo(pid: DWORD): Process =
         baseaddr: cast[ByteAddress](me.modBaseAddr),
         basesize: me.modBaseSize,
       )
-      result.modules[nullTerminated($$me.szModule)] = m
+      result.modules[$winstrConverterArrayToLPWSTR(me.szModule)] = m
 
 proc processByName*(name: string): Process =
   var pidArray = newSeq[int32](1024)
