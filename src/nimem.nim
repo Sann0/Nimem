@@ -145,3 +145,9 @@ proc nopCode*(p: Process, address: ByteAddress, length: int = 1) =
     p.write(address + i, NOP)
 
 proc close*(p: Process): bool {.discardable.} = CloseHandle(p.handle) == 1
+
+proc injectDll*(p: Process, dllPath: string) =
+  let vPtr = VirtualAllocEx(p.handle, nil, dllPath.len(), MEM_RESERVE or MEM_COMMIT, PAGE_EXECUTE_READWRITE)
+  WriteProcessMemory(p.handle, vPtr, dllPath[0].unsafeAddr, dllPath.len, nil)
+  if CreateRemoteThread(p.handle, nil, 0, cast[LPTHREAD_START_ROUTINE](LoadLibraryA), vPtr, 0, nil) == 0:
+    raise newException(IOError, fmt"Inject failed [Error: {GetLastError()}]")
