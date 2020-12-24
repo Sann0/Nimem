@@ -85,7 +85,7 @@ proc read*(p: Process, address: ByteAddress, t: typedesc): t =
 proc readSeq*(p: Process, address: ByteAddress, size: SIZE_T,  t: typedesc = byte): seq[t] =
   result = newSeq[t](size)
   if ReadProcessMemory(
-    p.handle, cast[pointer](address), result[0].addr, size, nil
+    p.handle, cast[pointer](address), result[0].addr, size * sizeOf(t), nil
   ) == 0:
     memoryErr("readSeq", address)
 
