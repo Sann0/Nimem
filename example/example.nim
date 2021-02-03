@@ -4,17 +4,18 @@ import os, random, strutils
 when isMainModule:
   randomize()
 
-  var 
+  var
+    processName = splitPath(paramStr(0)).tail
     myValue: int = 100
     address = cast[ByteAddress](myValue.unsafeAddr)
 
-  echo "Address of `myValue`: " & address.toHex(10)
-  let p = processByName("example.exe")
+  echo "Address of `myValue`: 0x" & address.toHex(10)
+  let p = processByName(processName)
 
   for _ in 1..5:
-    echo "`myValue` holds: " & $p.read(address, int)
+    myValue = rand(1000)
+    echo "randomized `myValue`: " & $myValue
+    echo "reading `myValue`: " & $p.read(address, int)
     sleep(1500)
-    echo "randomizing `myValue`"
-    myValue = rand(100000)
 
   p.close()
