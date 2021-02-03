@@ -13,8 +13,9 @@ when isMainModule:
   let p = processByName(processName)
 
   for _ in 1..5:
-    myValue = rand(1000)
-    echo "randomized `myValue`: " & $myValue
+    var randValue = rand(1000)
+    echo "writing `myValue`: " & $randValue
+    p.write(address, randValue)
     echo "reading `myValue`: " & $p.read(address, int)
     sleep(1500)
 
