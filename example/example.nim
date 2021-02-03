@@ -5,8 +5,8 @@ when isMainModule:
   randomize()
 
   var
+    myValue: int
     processName = splitPath(paramStr(0)).tail
-    myValue: int = 100
     address = cast[ByteAddress](myValue.unsafeAddr)
 
   echo "Address of `myValue`: 0x" & address.toHex(10)
